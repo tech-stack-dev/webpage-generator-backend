@@ -11,11 +11,8 @@ export class GeneratedPageService {
     const processedPrompts = prompts.map((prompt) =>
       this.replaceVariables(prompt, data),
     );
-    let response: string = '';
 
-    for (const prompt of processedPrompts) {
-      response = await this.openaiService.sendPrompt(prompt);
-    }
+    const response = this.openaiService.sendPromptsAsUser(processedPrompts);
 
     return response;
   }
