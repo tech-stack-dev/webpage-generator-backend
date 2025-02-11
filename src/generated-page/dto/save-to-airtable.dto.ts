@@ -17,9 +17,6 @@ export class SaveToAirtableDto {
   slug: string;
 
   @IsString()
-  geo: string;
-
-  @IsString()
   breadcrumb: string;
 
   @IsString()

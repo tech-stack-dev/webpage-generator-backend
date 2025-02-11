@@ -23,6 +23,9 @@ export class CreateGeneratedPageDto {
   metaDescription: string;
 
   @IsString()
+  breadcrumb: string;
+
+  @IsString()
   geo: string;
 
   @IsString()
@@ -31,4 +34,45 @@ export class CreateGeneratedPageDto {
   @IsArray()
   @IsString({ each: true })
   prompts: string[];
+}
+
+export class GeneratePageDto {
+  @IsString()
+  serviceType: string;
+
+  @IsString()
+  basePage: string;
+
+  @IsString()
+  structurePage: string;
+  minTextSize: number;
+
+  @IsString()
+  keywords: string;
+
+  @IsString()
+  metaTitle: string;
+
+  @IsString()
+  metaDescription: string;
+
+  @IsString()
+  breadcrumb: string;
+
+  @IsString()
+  geo: string;
+
+  @IsString()
+  slug: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  mainContentPrompts: string[];
+
+  @IsString()
+  heroSectionTitle: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  heroContentPrompts: string[];
 }

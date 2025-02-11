@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { UpdateGeneratedPageDto } from './dto/update-generated-page.dto';
-import { CreateGeneratedPageDto } from './dto/create-generated-page.dto';
+import {
+  CreateGeneratedPageDto,
+  GeneratePageDto,
+} from './dto/create-generated-page.dto';
 import { OpenaiService } from 'src/openai/openai.service';
 
 @Injectable()
@@ -8,6 +11,16 @@ export class GeneratedPageService {
   constructor(private readonly openaiService: OpenaiService) {}
 
   async generatePage(prompts: string[], data: CreateGeneratedPageDto) {
+    const processedPrompts = prompts.map((prompt) =>
+      this.replaceVariables(prompt, data),
+    );
+
+    const response = this.openaiService.sendPromptsAsUser(processedPrompts);
+
+    return response;
+  }
+
+  async askChatGPT(prompts: string[], data: GeneratePageDto) {
     const processedPrompts = prompts.map((prompt) =>
       this.replaceVariables(prompt, data),
     );

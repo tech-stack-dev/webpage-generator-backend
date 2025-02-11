@@ -6,9 +6,13 @@ import {
   Patch,
   Param,
   Delete,
+  HttpCode,
 } from '@nestjs/common';
 import { GeneratedPageService } from './generated-page.service';
-import { CreateGeneratedPageDto } from './dto/create-generated-page.dto';
+import {
+  CreateGeneratedPageDto,
+  GeneratePageDto,
+} from './dto/create-generated-page.dto';
 import { UpdateGeneratedPageDto } from './dto/update-generated-page.dto';
 import { SaveToAirtableDto } from './dto/save-to-airtable.dto';
 import * as Airtable from 'airtable';
@@ -18,20 +22,20 @@ export class GeneratedPageController {
   constructor(private readonly generatedPageService: GeneratedPageService) {}
 
   @Post('save-to-airtable')
-  savePage() {
+  @HttpCode(200)
+  savePage(@Body() request: SaveToAirtableDto) {
     const baseId = 'appctwyrBLnP8lWGk';
     const tableName = 'webpages';
 
     const newRecord = {
-      Name: 'Example Name',
-      mainContent: 'This is the main content of the record.',
-      metaTitle: 'Example Meta Title',
-      metaDescription: 'Example Meta Description providing more details.',
-      slug: 'example-slug',
-      breadcrumb: 'Home > Section > Subsection',
-      heroTitle: 'Welcome to Our Page',
-      heroContent:
-        'This is the hero section content that highlights the main message.',
+      Name: 'Test',
+      mainContent: request.mainContent,
+      metaTitle: request.metaTitle,
+      metaDescription: request.metaDescription,
+      slug: request.slug,
+      breadcrumb: request.breadcrumb,
+      heroTitle: request.heroTitle,
+      heroContent: request.heroContent,
     };
 
     const base = new Airtable().base(baseId);
@@ -47,6 +51,21 @@ export class GeneratedPageController {
     });
 
     return 'hello world';
+  }
+
+  @Post('generate')
+  async generatePage(@Body() generatePage: GeneratePageDto) {
+    const generatedMainContent = await this.generatedPageService.askChatGPT(
+      generatePage.mainContentPrompts,
+      generatePage,
+    );
+
+    const generatedHeroContent = await this.generatedPageService.askChatGPT(
+      generatePage.heroContentPrompts,
+      generatePage,
+    );
+
+    return { generatedMainContent, generatedHeroContent };
   }
 
   @Post()
