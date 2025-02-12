@@ -45,6 +45,8 @@ export class GeneratePageDto {
 
   @IsString()
   structurePage: string;
+
+  @IsString()
   minTextSize: number;
 
   @IsString()
