@@ -55,6 +55,21 @@ export class GeneratedPageController {
 
   @Post('generate')
   async generatePage(@Body() generatePage: GeneratePageDto) {
+    generatePage.structurePage = this.generatedPageService.replaceVariables(
+      generatePage.structurePage,
+      generatePage,
+    );
+
+    generatePage.keywords = this.generatedPageService.replaceVariables(
+      generatePage.keywords,
+      generatePage,
+    );
+
+    generatePage.breadcrumb = this.generatedPageService.replaceVariables(
+      generatePage.breadcrumb,
+      generatePage,
+    );
+
     const generatedMainContent = await this.generatedPageService.askChatGPT(
       generatePage.mainContentPrompts,
       generatePage,
