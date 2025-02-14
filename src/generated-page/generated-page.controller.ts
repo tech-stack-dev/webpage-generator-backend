@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   Controller,
   Get,
@@ -7,6 +10,8 @@ import {
   Param,
   Delete,
   HttpCode,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { GeneratedPageService } from './generated-page.service';
 import {
@@ -16,10 +21,17 @@ import {
 import { UpdateGeneratedPageDto } from './dto/update-generated-page.dto';
 import { SaveToAirtableDto } from './dto/save-to-airtable.dto';
 import * as Airtable from 'airtable';
+import { SaveToWebflowDto } from './dto/save-to-webflow.dto';
+// import { SaveToWebflowDto } from './dto/save-to-webflow.dto';
 
 @Controller('generated-page')
 export class GeneratedPageController {
   constructor(private readonly generatedPageService: GeneratedPageService) {}
+
+  // @Get('test')
+  // async test() {
+  //   return await this.generatedPageService.updateWebflowCollection();
+  // }
 
   @Post('save-to-airtable')
   @HttpCode(200)
@@ -28,7 +40,7 @@ export class GeneratedPageController {
     const tableName = 'webpages';
 
     const newRecord = {
-      Name: 'Test',
+      Name: request.name,
       mainContent: request.mainContent,
       metaTitle: request.metaTitle,
       metaDescription: request.metaDescription,
@@ -50,7 +62,7 @@ export class GeneratedPageController {
       }
     });
 
-    return 'hello world';
+    return newRecord;
   }
 
   @Post('generate')
@@ -83,6 +95,33 @@ export class GeneratedPageController {
     return { generatedMainContent, generatedHeroContent };
   }
 
+  @Post('save-to-webflow')
+  async saveToWebflow(@Body() body: SaveToWebflowDto) {
+    const record = await this.generatedPageService.getAirtableRecordByName(
+      body.name,
+    );
+
+    if (!record) {
+      throw new HttpException(
+        `Record with name "${body.name}" not found`,
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    const request = {
+      name: record.Name as string | undefined,
+      slug: record.slug as string | undefined,
+      maincontent: record.mainContent as string | undefined,
+      metatitle: record.metaTitle as string | undefined,
+      metadescription: record.metaDescription as string | undefined,
+      breadcrumb: record.breadcrumb as string | undefined,
+      herotitle: record.heroTitle as string | undefined,
+      herocontent: record.heroContent as string | undefined,
+    };
+
+    return await this.generatedPageService.updateWebflowCollection(request);
+  }
+
   @Post()
   async create(@Body() createGeneratedPageDto: CreateGeneratedPageDto) {
     const generatedPage = await this.generatedPageService.generatePage(
@@ -91,6 +130,27 @@ export class GeneratedPageController {
     );
 
     return { generatedPage };
+  }
+
+  @Get('records')
+  async getAirtableRecords() {
+    const baseId = 'appctwyrBLnP8lWGk';
+    const tableName = 'webpages';
+
+    const base = new Airtable().base(baseId);
+
+    try {
+      const records = await base(tableName).select().all();
+
+      const data = records.map((record) => record.fields);
+      return data.find((record) => record.Name === 'Test');
+    } catch (error) {
+      console.error('Error fetching Airtable records:', error);
+      throw new HttpException(
+        'Error fetching Airtable records',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   @Get()
