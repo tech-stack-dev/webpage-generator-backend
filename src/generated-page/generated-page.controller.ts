@@ -20,16 +20,9 @@ import { UpdateGeneratedPageDto } from './dto/update-generated-page.dto';
 import { SaveToAirtableDto } from './dto/save-to-airtable.dto';
 import * as Airtable from 'airtable';
 import { SaveToWebflowDto } from './dto/save-to-webflow.dto';
-// import { SaveToWebflowDto } from './dto/save-to-webflow.dto';
-
 @Controller('generated-page')
 export class GeneratedPageController {
   constructor(private readonly generatedPageService: GeneratedPageService) {}
-
-  // @Get('test')
-  // async test() {
-  //   return await this.generatedPageService.updateWebflowCollection();
-  // }
 
   @Post('save-to-airtable')
   @HttpCode(200)
