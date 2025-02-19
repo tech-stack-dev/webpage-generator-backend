@@ -1,6 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   Controller,
   Get,
@@ -143,7 +141,7 @@ export class GeneratedPageController {
       const records = await base(tableName).select().all();
 
       const data = records.map((record) => record.fields);
-      return data.find((record) => record.Name === 'Test');
+      return data;
     } catch (error) {
       console.error('Error fetching Airtable records:', error);
       throw new HttpException(
