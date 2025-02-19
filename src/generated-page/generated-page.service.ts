@@ -101,7 +101,7 @@ export class GeneratedPageService {
         metadescription: body.metadescription,
         breadcrubm: body.breadcrumb,
         herotitle: body.herotitle,
-        herocontent: body.herotitle,
+        herocontent: body.herocontent,
       },
     };
 
