@@ -1,25 +1,21 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
 import {
+  Body,
   Controller,
   Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
   HttpCode,
   HttpException,
   HttpStatus,
+  Post,
 } from '@nestjs/common';
-import { GeneratedPageService } from './generated-page.service';
+import * as Airtable from 'airtable';
 import {
   CreateGeneratedPageDto,
   GeneratePageDto,
 } from './dto/create-generated-page.dto';
-import { UpdateGeneratedPageDto } from './dto/update-generated-page.dto';
 import { SaveToAirtableDto } from './dto/save-to-airtable.dto';
-import * as Airtable from 'airtable';
 import { SaveToWebflowDto } from './dto/save-to-webflow.dto';
+import { GeneratedPageService } from './generated-page.service';
+
 @Controller('generated-page')
 export class GeneratedPageController {
   constructor(private readonly generatedPageService: GeneratedPageService) {}
@@ -142,28 +138,5 @@ export class GeneratedPageController {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
-  }
-
-  @Get()
-  findAll() {
-    return this.generatedPageService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.generatedPageService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateGeneratedPageDto: UpdateGeneratedPageDto,
-  ) {
-    return this.generatedPageService.update(+id, updateGeneratedPageDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.generatedPageService.remove(+id);
   }
 }

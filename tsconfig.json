@@ -1,21 +1,33 @@
 {
   "compilerOptions": {
+    // Transpilation options
     "module": "commonjs",
+    // Emit options
     "declaration": true,
     "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "allowSyntheticDefaultImports": true,
-    "target": "ES2021",
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
     "incremental": true,
+    // General options:
+    "target": "ES2021",
+    "lib": [
+      "ES2023"
+    ] /* Specify a set of bundled library declaration files that describe the target runtime environment. */,
+    "allowSyntheticDefaultImports": true,
+    // Strictness
+    "strict": true,
     "skipLibCheck": true,
-    "strictNullChecks": true,
-    "forceConsistentCasingInFileNames": true,
-    "noImplicitAny": false,
-    "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false
+    "strictPropertyInitialization": false /* disabled specifically to not get errors from Entity-definitons */,
+    "forceConsistentCasingInFileNames": true /* Windows and MacOS are case-insensitive, Linux is case-sensitive */,
+    "noFallthroughCasesInSwitch": true /* forces to break, return or throw from every case of switch-statement */,
+    "noUncheckedIndexedAccess": true /* Prevents you from accessing an array or object without first checking if it's defined. */,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true
+    /* RULE BELOW IS HIGHLY SUBJECTIVE, THUS COMMENTED FOR NOW, but I think the program which
+    does not satisfy set constraints (and so is error-prone) should not be run until the error is resolved */
+    // "noEmitOnError": true
   }
 }

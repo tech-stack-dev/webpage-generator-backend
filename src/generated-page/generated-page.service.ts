@@ -1,11 +1,10 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { UpdateGeneratedPageDto } from './dto/update-generated-page.dto';
+import * as Airtable from 'airtable';
+import { OpenaiService } from 'src/openai/openai.service';
 import {
   CreateGeneratedPageDto,
   GeneratePageDto,
 } from './dto/create-generated-page.dto';
-import { OpenaiService } from 'src/openai/openai.service';
-import * as Airtable from 'airtable';
 
 export interface WebflowItem {
   name: string | undefined;
@@ -119,22 +118,6 @@ export class GeneratedPageService {
       },
     );
 
-    return await response.json();
-  }
-
-  findAll() {
-    return `This action returns all generatedPage`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} generatedPage`;
-  }
-
-  update(id: number, updateGeneratedPageDto: UpdateGeneratedPageDto) {
-    return `This action updates a #${id} generatedPage`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} generatedPage`;
+    return (await response.json()) as Promise<unknown>;
   }
 }
