@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import * as Airtable from 'airtable';
 import { OpenaiService } from 'src/openai/openai.service';
 import {
@@ -30,6 +30,8 @@ export interface Page {
 
 @Injectable()
 export class GeneratedPageService {
+  private readonly logger = new Logger(GeneratedPageService.name);
+
   constructor(private readonly openaiService: OpenaiService) {}
 
   async generatePage(prompts: string[], data: CreateGeneratedPageDto) {
@@ -60,7 +62,9 @@ export class GeneratedPageService {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const replacement = data[varName as string];
       if (replacement === undefined) {
-        console.warn(`Warning: No matching property for variable "${varName}"`);
+        this.logger.warn(
+          `Warning: No matching property for variable "${varName}"`,
+        );
         return match;
       }
       return String(replacement);
@@ -68,10 +72,15 @@ export class GeneratedPageService {
   };
 
   async getAirtableRecordByName(name: string) {
-    const baseId = 'appctwyrBLnP8lWGk';
+    const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
+
+    if (!AIRTABLE_BASE_ID) {
+      throw new Error('No AIRTABLE_BASE_ID was provided to an app');
+    }
+
     const tableName = 'webpages';
 
-    const base = new Airtable().base(baseId);
+    const base = new Airtable().base(AIRTABLE_BASE_ID);
 
     try {
       const records = await base(tableName).select().all();
@@ -80,11 +89,8 @@ export class GeneratedPageService {
         .map((record) => record.fields)
         .find((record) => record.Name === name);
     } catch (error) {
-      console.error('Error fetching Airtable records:', error);
-      throw new HttpException(
-        'Error fetching Airtable records',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      this.logger.error('Error fetching Airtable records:', error);
+      throw new Error('No AIRTABLE_BASE_ID was provided to an app');
     }
   }
 

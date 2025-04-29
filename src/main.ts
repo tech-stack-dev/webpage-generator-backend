@@ -1,9 +1,19 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import {
+  FastifyAdapter,
+  NestFastifyApplication,
+} from '@nestjs/platform-fastify';
+
+const HOST = process.env.HOST;
+const PORT = process.env.PORT;
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestFastifyApplication>(
+    AppModule,
+    new FastifyAdapter(),
+  );
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -14,9 +24,13 @@ async function bootstrap() {
 
   app.enableCors();
 
-  await app.listen(process.env.PORT ?? 3000, '0.0.0.0');
+  await app.listen(PORT ?? 3000, HOST ?? '0.0.0.0');
 }
 
-bootstrap().catch((err) => {
-  console.log('Error during application bootstrap', err);
-});
+bootstrap()
+  .then(() => {
+    console.log(`App listens at ${HOST}:${PORT}`);
+  })
+  .catch((err) => {
+    console.log('Error during application bootstrap', err);
+  });
