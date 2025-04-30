@@ -1,33 +1,40 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
 import {
+  Body,
   Controller,
   Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
   HttpCode,
   HttpException,
   HttpStatus,
+  Logger,
+  Post,
 } from '@nestjs/common';
-import { GeneratedPageService } from './generated-page.service';
+import * as Airtable from 'airtable';
 import {
   CreateGeneratedPageDto,
   GeneratePageDto,
 } from './dto/create-generated-page.dto';
-import { UpdateGeneratedPageDto } from './dto/update-generated-page.dto';
 import { SaveToAirtableDto } from './dto/save-to-airtable.dto';
-import * as Airtable from 'airtable';
 import { SaveToWebflowDto } from './dto/save-to-webflow.dto';
+import { GeneratedPageService } from './generated-page.service';
+
 @Controller('generated-page')
 export class GeneratedPageController {
+  private readonly logger = new Logger(GeneratedPageController.name);
+
   constructor(private readonly generatedPageService: GeneratedPageService) {}
 
   @Post('save-to-airtable')
   @HttpCode(200)
   savePage(@Body() request: SaveToAirtableDto) {
-    const baseId = 'appctwyrBLnP8lWGk';
+    const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
+
+    if (!AIRTABLE_BASE_ID) {
+      throw new HttpException(
+        'No AIRTABLE_BASE_ID was provided to an app',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+
     const tableName = 'webpages';
 
     const newRecord = {
@@ -41,15 +48,15 @@ export class GeneratedPageController {
       heroContent: request.heroContent,
     };
 
-    const base = new Airtable().base(baseId);
+    const base = new Airtable().base(AIRTABLE_BASE_ID);
 
     base(tableName).create(newRecord, (err, record) => {
       if (err) {
-        console.error('Error adding record:', err);
+        this.logger.error('Error adding record:', err);
         return;
       }
       if (record) {
-        console.log('Record added with ID:', record.getId());
+        this.logger.log('Record added with ID:', record.getId());
       }
     });
 
@@ -125,10 +132,18 @@ export class GeneratedPageController {
 
   @Get('records')
   async getAirtableRecords() {
-    const baseId = 'appctwyrBLnP8lWGk';
+    const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
+
+    if (!AIRTABLE_BASE_ID) {
+      throw new HttpException(
+        'No AIRTABLE_BASE_ID was provided to an app',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+
     const tableName = 'webpages';
 
-    const base = new Airtable().base(baseId);
+    const base = new Airtable().base(AIRTABLE_BASE_ID);
 
     try {
       const records = await base(tableName).select().all();
@@ -136,34 +151,11 @@ export class GeneratedPageController {
       const data = records.map((record) => record.fields);
       return data;
     } catch (error) {
-      console.error('Error fetching Airtable records:', error);
+      this.logger.error('Error fetching Airtable records:', error);
       throw new HttpException(
         'Error fetching Airtable records',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
-  }
-
-  @Get()
-  findAll() {
-    return this.generatedPageService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.generatedPageService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateGeneratedPageDto: UpdateGeneratedPageDto,
-  ) {
-    return this.generatedPageService.update(+id, updateGeneratedPageDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.generatedPageService.remove(+id);
   }
 }
