@@ -2,11 +2,11 @@
 
 Backend service of the TSWebPageGenerator, responsible for API calls to OpenAI
 and incoming-prompts pre-processing.
-Utilizes the Nest.js framework https://nestjs.com/.
+Utilizes the Nest.js framework https://nestjs.com/ with FASTIFY-adapter.
 
 ## Prerequisites
 
-- Make sure that Node.js and Yarn are installed
+- Make sure that Node.js and PNPM are installed
   - https://nodejs.org/en/download/
   - https://pnpm.io/installation#using-corepack
 - Node version >= 20.x (locally latest LTS 22.15.0 was observed to work without any hiccups)

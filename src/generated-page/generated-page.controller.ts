@@ -16,6 +16,7 @@ import {
 import { SaveToAirtableDto } from './dto/save-to-airtable.dto';
 import { SaveToWebflowDto } from './dto/save-to-webflow.dto';
 import { GeneratedPageService } from './generated-page.service';
+import { GeneratePageResponse } from '../utils/types';
 
 @Controller('generated-page')
 export class GeneratedPageController {
@@ -64,7 +65,9 @@ export class GeneratedPageController {
   }
 
   @Post('generate')
-  async generatePage(@Body() generatePage: GeneratePageDto) {
+  async generatePage(
+    @Body() generatePage: GeneratePageDto,
+  ): Promise<GeneratePageResponse> {
     generatePage.structurePage = this.generatedPageService.replaceVariables(
       generatePage.structurePage,
       generatePage,
@@ -80,6 +83,26 @@ export class GeneratedPageController {
       generatePage,
     );
 
+    generatePage.metaTitle = this.generatedPageService.replaceVariables(
+      generatePage.metaTitle,
+      generatePage,
+    );
+
+    generatePage.metaDescription = this.generatedPageService.replaceVariables(
+      generatePage.metaDescription,
+      generatePage,
+    );
+
+    generatePage.slug = this.generatedPageService.replaceVariables(
+      generatePage.slug,
+      generatePage,
+    );
+
+    generatePage.heroSectionTitle = this.generatedPageService.replaceVariables(
+      generatePage.heroSectionTitle,
+      generatePage,
+    );
+
     const generatedMainContent = await this.generatedPageService.askChatGPT(
       generatePage.mainContentPrompts,
       generatePage,
@@ -90,7 +113,15 @@ export class GeneratedPageController {
       generatePage,
     );
 
-    return { generatedMainContent, generatedHeroContent };
+    return {
+      generatedMainContent,
+      generatedHeroContent,
+      metaTitle: generatePage.metaTitle,
+      metaDescription: generatePage.metaDescription,
+      keywords: generatePage.keywords,
+      slug: generatePage.slug,
+      heroSectionTitle: generatePage.heroSectionTitle,
+    };
   }
 
   @Post('save-to-webflow')
