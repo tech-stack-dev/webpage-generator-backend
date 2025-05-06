@@ -33,7 +33,7 @@ async function bootstrap(): Promise<NestApp> {
   const adapter = new FastifyAdapter(instance);
 
   adapter.enableCors({
-    origin: 'https://web-generator-client.vercel.app',
+    origin: '*',
     allowedHeaders: '*',
     exposedHeaders: '*',
     credentials: false,
