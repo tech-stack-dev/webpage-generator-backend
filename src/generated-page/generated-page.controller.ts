@@ -17,6 +17,7 @@ import { SaveToAirtableDto } from './dto/save-to-airtable.dto';
 import { SaveToWebflowDto } from './dto/save-to-webflow.dto';
 import { GeneratedPageService } from './generated-page.service';
 import { GeneratePageResponse } from '../utils/types';
+import { correctionOfHTMLPrompt } from 'src/utils/constants';
 
 @Controller('generated-page')
 export class GeneratedPageController {
@@ -103,10 +104,27 @@ export class GeneratedPageController {
       generatePage,
     );
 
-    const generatedMainContent = await this.generatedPageService.askChatGPT(
+    let generatedMainContent = await this.generatedPageService.askChatGPT(
       generatePage.mainContentPrompts,
       generatePage,
     );
+
+    // NOTE: making second request for 100% HTML-structure following
+    const isValid =
+      await this.generatedPageService.validateHTMLContent(generatedMainContent);
+
+    if (!isValid) {
+      generatedMainContent = await this.generatedPageService.askChatGPT(
+        [
+          `${correctionOfHTMLPrompt}
+          Here is what you have generated previously:
+          ${generatedMainContent}
+          You generated it with this requirements:
+          ${generatePage.mainContentPrompts[0]}`,
+        ],
+        generatePage,
+      );
+    }
 
     const generatedHeroContent = await this.generatedPageService.askChatGPT(
       generatePage.heroContentPrompts,
