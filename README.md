@@ -4,12 +4,19 @@ Backend service of the TSWebPageGenerator, responsible for API calls to OpenAI
 and incoming-prompts pre-processing.
 Utilizes the Nest.js framework https://nestjs.com/ with FASTIFY-adapter.
 
+Deployed on AWS-lambda.
+
 ## Prerequisites
 
 - Make sure that Node.js and PNPM are installed
   - https://nodejs.org/en/download/
   - https://pnpm.io/installation#using-corepack
-- Node version >= 20.x (locally latest LTS 22.15.0 was observed to work without any hiccups)
+- Node version >= 20.x (locally, both through HTTP & Serverless-offline, latest LTS 22.15.0 was observed to work without any hiccups)
+
+### If you want to develop locally using not ordinary HTTP-server, but through serverless-offline:
+
+- Make sure that you have Serverless installed globally and you have signed-up to an account:
+  - https://www.serverless.com/framework/docs/getting-started
 
 ## Dependencies installation
 
@@ -27,11 +34,15 @@ $ pnpm install
 ## Run the project locally
 
 ```bash
-# development
+# development mode http
 $ pnpm run start
 
-# watch mode
-$ pnpm run start:dev
+# watch mode as an ordinary local http-server
+# do NOT FORGET to set START_AS_HTTP to true
+$ pnpm run start:dev:http
+
+# watch mode through local lambda setup by serverless-offline
+$ pnpm run start:dev:lambda
 ```
 
 ## Building and running in production environment:
@@ -40,7 +51,7 @@ $ pnpm run start:dev
 # build
 $ pnpm run build
 
-# run in production mode
+# run in production mode (http-only, as lambda will be called by AWS itself)
 $ pnpm run start:prod
 ```
 

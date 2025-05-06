@@ -1,0 +1,30 @@
+---
+service: web-page-generator-fastify
+
+configValidationMode: error
+
+provider:
+  name: aws
+  runtime: nodejs22.x
+  architecture: arm64
+  memorySize: 256
+  timeout: 10
+  stage: ${opt:stage, 'dev'}
+  region: eu-north-1
+
+functions:
+  api:
+    handler: dist/main.handler
+    events:
+      - httpApi:
+          method: any
+          path: /{proxy+}
+
+plugins:
+  - serverless-offline
+
+custom:
+  # Set serverless offline port
+  serverless-offline:
+    lambdaPort: 3000
+    httpPort: 8080
