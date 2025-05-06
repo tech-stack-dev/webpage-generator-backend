@@ -5,6 +5,7 @@ import {
   CreateGeneratedPageDto,
   GeneratePageDto,
 } from './dto/create-generated-page.dto';
+import * as validator from 'html-validator';
 
 export interface WebflowItem {
   name: string | undefined;
@@ -125,5 +126,29 @@ export class GeneratedPageService {
     );
 
     return (await response.json()) as Promise<unknown>;
+  }
+
+  async validateHTMLContent(htmlLikeData: string): Promise<boolean> {
+    const validationOptions = {
+      // NOTE: option to validate locally instead of doing a roundtrip to the remote server
+      data: htmlLikeData,
+      validator: 'WHATWG',
+      isFragment: true,
+    };
+
+    try {
+      const validationResult = await validator(validationOptions);
+      //@ts-expect-error incomplete typings of said library
+      console.log('VALID BY VALIDATOR', validationResult.isValid);
+
+      //@ts-expect-error incomplete typings
+      return validationResult.isValid as boolean;
+    } catch (error) {
+      console.error(
+        'Error during validation of the document occured, which is not related to the validator itself',
+        error,
+      );
+      return false;
+    }
   }
 }
