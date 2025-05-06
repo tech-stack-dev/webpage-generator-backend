@@ -30,10 +30,19 @@ async function bootstrap(): Promise<NestApp> {
   // NOTE: initializing fastify instance with additional options
 
   const instance: FastifyInstance = fastify();
+  const adapter = new FastifyAdapter(instance);
+
+  adapter.enableCors({
+    origin: '*',
+    allowedHeaders: '*',
+    exposedHeaders: '*',
+    credentials: false,
+    methods: ['GET', 'PUT', 'OPTIONS', 'POST', 'DELETE'],
+  });
 
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
-    new FastifyAdapter(instance),
+    adapter,
   );
 
   app.useGlobalPipes(
@@ -42,14 +51,6 @@ async function bootstrap(): Promise<NestApp> {
       transform: true,
     }),
   );
-
-  app.enableCors({
-    origin: '*',
-    allowedHeaders: '*',
-    exposedHeaders: '*',
-    credentials: false,
-    methods: ['GET', 'PUT', 'OPTIONS', 'POST', 'DELETE'],
-  });
 
   // Set the prefix as necessary
   app.setGlobalPrefix(API_PREFIX ?? 'api/v1');
