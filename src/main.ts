@@ -43,13 +43,7 @@ async function bootstrap(): Promise<NestApp> {
     }),
   );
 
-  app.enableCors({
-    origin: '*',
-    allowedHeaders: '*',
-    exposedHeaders: '*',
-    credentials: false,
-    methods: ['GET', 'PUT', 'OPTIONS', 'POST', 'DELETE'],
-  });
+  app.enableCors();
 
   // Set the prefix as necessary
   app.setGlobalPrefix(API_PREFIX ?? 'api/v1');
