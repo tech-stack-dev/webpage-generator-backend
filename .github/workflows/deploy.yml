@@ -1,0 +1,67 @@
+name: Deploy WPG API to AWS Lambda
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22' # Double check the Node version running on our Lambda
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build code
+        env:
+          START_AS_HTTP: 'false'
+          OPENAI_API_KEY: 'tbd'
+        run: nest build --builder=webpack
+
+      - name: Archive code
+        run: cd dist && zip -r ../function.zip .
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Update Lambda Function Code
+        run: |
+          aws lambda update-function-code \
+            --function-name ${{ vars.AWS_WPG_API_LAMBDA_NAME }} \
+            --zip-file fileb://function.zip
+
+          echo "Waiting for Lambda function update to complete..."
+          aws lambda wait function-updated --function-name ${{ vars.AWS_WPG_API_LAMBDA_NAME }}
+
+      - name: Update Lambda Configuration for Environment Variables
+        run: |
+          JSON_ENV=$(cat <<EOF
+          {
+            "Variables": {
+              "START_AS_HTTP": "false"
+              "OPENAI_API_KEY": "tbd"
+            }
+          }
+          EOF
+          )
+
+          aws lambda update-function-configuration \
+            --function-name ${{ vars.AWS_WPG_API_LAMBDA_NAME }} \
+            --environment "$JSON_ENV"
