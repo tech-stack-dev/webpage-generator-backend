@@ -2,7 +2,7 @@ name: Deploy WPG API to AWS Lambda
 
 on:
   push:
-    branches: [ main ]
+    branches: [ iv_support-aws-deployment ]
 
 jobs:
   build-and-deploy:
@@ -29,7 +29,7 @@ jobs:
         env:
           START_AS_HTTP: 'false'
           OPENAI_API_KEY: 'tbd'
-        run: nest build --builder=webpack
+        run: pnpm build:prod
 
       - name: Archive code
         run: cd dist && zip -r ../function.zip .
