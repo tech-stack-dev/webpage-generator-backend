@@ -55,7 +55,7 @@ jobs:
           JSON_ENV=$(cat <<EOF
           {
             "Variables": {
-              "START_AS_HTTP": "false"
+              "START_AS_HTTP": "false",
               "OPENAI_API_KEY": "tbd"
             }
           }
