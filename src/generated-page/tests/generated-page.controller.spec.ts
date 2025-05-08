@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { GeneratedPageController } from '../generated-page.controller';
 import { GeneratedPageService } from '../generated-page.service';
-import { OpenaiService } from 'src/openai/openai.service';
+import { OpenaiService } from '../../openai/openai.service';
 
 // NOTE: mocking OpenAI service
 // ---------------------

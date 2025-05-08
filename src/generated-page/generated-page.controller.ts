@@ -17,7 +17,7 @@ import { SaveToAirtableDto } from './dto/save-to-airtable.dto';
 import { SaveToWebflowDto } from './dto/save-to-webflow.dto';
 import { GeneratedPageService } from './generated-page.service';
 import { GeneratePageResponse } from '../utils/types';
-import { correctionOfHTMLPrompt } from 'src/utils/constants';
+import { correctionOfHTMLPrompt } from '../utils/constants';
 
 @Controller('generated-page')
 export class GeneratedPageController {

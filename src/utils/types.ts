@@ -1,4 +1,4 @@
-import type { GeneratePageDto } from 'src/generated-page/dto/create-generated-page.dto';
+import type { GeneratePageDto } from '../generated-page/dto/create-generated-page.dto';
 
 export type GeneratePageResponse = {
   generatedMainContent: string;
