@@ -10,12 +10,12 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '22' # Double check the Node version running on our Lambda
+          node-version: '22'
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -26,10 +26,7 @@ jobs:
         run: pnpm install
 
       - name: Build code
-        env:
-          START_AS_HTTP: 'false'
-          OPENAI_API_KEY: 'tbd'
-        run: nest build --builder=webpack
+        run: pnpm build:prod
 
       - name: Archive code
         run: cd dist && zip -r ../function.zip .
@@ -55,8 +52,14 @@ jobs:
           JSON_ENV=$(cat <<EOF
           {
             "Variables": {
-              "START_AS_HTTP": "false"
-              "OPENAI_API_KEY": "tbd"
+              "START_AS_HTTP": "false",
+              "API_PREFIX": ${{vars.API_PREFIX}},
+              "AIRTABLE_BASE_ID": ${{secrets.AIRTABLE_BASE_ID}},
+              "AIRTABLE_API_KEY": ${{secrets.AIRTABLE_API_KEY}},
+              "OPENAI_API_KEY": ${{secrets.OPENAI_API_KEY}},
+              "ADMIN_WEBFLOW_CMS_API_KEY": ${{secrets.ADMIN_WEBFLOW_CMS_API_KEY}},
+              "WEBFLOW_CMS_API_KEY": ${{secrets.WEBFLOW_CMS_API_KEY}},
+              "WEBFLOW_COLLECTION_ID": ${{secrets.WEBFLOW_COLLECTION_ID}}
             }
           }
           EOF

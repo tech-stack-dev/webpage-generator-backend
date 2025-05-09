@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as Airtable from 'airtable';
-import { OpenaiService } from 'src/openai/openai.service';
+import { OpenaiService } from '../openai/openai.service';
 import {
   CreateGeneratedPageDto,
   GeneratePageDto,
