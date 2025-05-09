@@ -1,7 +1,7 @@
 const path = require('path');
 
 module.exports = {
-  entry: './src/main.ts', // Adjust the entry file accordingly
+  entry: './src/main.ts',
   target: 'node',
   output: {
     path: path.resolve(__dirname, 'dist'),
@@ -11,17 +11,12 @@ module.exports = {
   externals: {},
   resolve: {
     extensions: ['.ts', '.js'],
-    // modules: [path.resolve(__dirname, 'src'), 'node_modules'],
-    // alias: {
-    //   '@': path.resolve(__dirname, 'src'), // Create an alias for 'src'
-    // },
   },
   module: {
     rules: [
       {
         test: /\.ts$/,
         use: 'ts-loader',
-        //exclude: /node_modules/,
       },
     ],
   },

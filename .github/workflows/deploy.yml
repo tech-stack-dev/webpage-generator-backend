@@ -2,7 +2,7 @@ name: Deploy WPG API to AWS Lambda
 
 on:
   push:
-    branches: [ iv_support-aws-deployment ]
+    branches: [ main ]
 
 jobs:
   build-and-deploy:
@@ -26,9 +26,6 @@ jobs:
         run: pnpm install
 
       - name: Build code
-        env:
-          START_AS_HTTP: 'false'
-          OPENAI_API_KEY: 'tbd'
         run: pnpm build:prod
 
       - name: Archive code
@@ -56,7 +53,13 @@ jobs:
           {
             "Variables": {
               "START_AS_HTTP": "false",
-              "OPENAI_API_KEY": "tbd"
+              "API_PREFIX": ${{vars.API_PREFIX}},
+              "AIRTABLE_BASE_ID": ${{secrets.AIRTABLE_BASE_ID}},
+              "AIRTABLE_API_KEY": ${{secrets.AIRTABLE_API_KEY}},
+              "OPENAI_API_KEY": ${{secrets.OPENAI_API_KEY}},
+              "ADMIN_WEBFLOW_CMS_API_KEY": ${{secrets.ADMIN_WEBFLOW_CMS_API_KEY}},
+              "WEBFLOW_CMS_API_KEY": ${{secrets.WEBFLOW_CMS_API_KEY}},
+              "WEBFLOW_COLLECTION_ID": ${{secrets.WEBFLOW_COLLECTION_ID}}
             }
           }
           EOF
