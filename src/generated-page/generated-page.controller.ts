@@ -28,41 +28,7 @@ export class GeneratedPageController {
   @Post('save-to-airtable')
   @HttpCode(200)
   savePage(@Body() request: SaveToAirtableDto) {
-    const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
-
-    if (!AIRTABLE_BASE_ID) {
-      throw new HttpException(
-        'No AIRTABLE_BASE_ID was provided to an app',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-
-    const tableName = 'webpages';
-
-    const newRecord = {
-      Name: request.name,
-      mainContent: request.mainContent,
-      metaTitle: request.metaTitle,
-      metaDescription: request.metaDescription,
-      slug: request.slug,
-      breadcrumb: request.breadcrumb,
-      heroTitle: request.heroTitle,
-      heroContent: request.heroContent,
-    };
-
-    const base = new Airtable().base(AIRTABLE_BASE_ID);
-
-    base(tableName).create(newRecord, (err, record) => {
-      if (err) {
-        this.logger.error('Error adding record:', err);
-        return;
-      }
-      if (record) {
-        this.logger.log('Record added with ID:', record.getId());
-      }
-    });
-
-    return newRecord;
+    return this.generatedPageService.createWebpage(request);
   }
 
   @Post('generate')
