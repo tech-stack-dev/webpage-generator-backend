@@ -17,13 +17,20 @@ import { SaveToAirtableDto } from './dto/save-to-airtable.dto';
 import { SaveToWebflowDto } from './dto/save-to-webflow.dto';
 import { GeneratedPageService } from './generated-page.service';
 import { GeneratePageResponse } from '../utils/types';
-import { correctionOfHTMLPrompt } from '../utils/constants';
+import {
+  correctionOfHTMLPrompt,
+  generateMultipleGeosSeparatedPrompt,
+} from '../utils/constants';
+import { OpenaiService } from 'src/openai/openai.service';
 
 @Controller('generated-page')
 export class GeneratedPageController {
   private readonly logger = new Logger(GeneratedPageController.name);
 
-  constructor(private readonly generatedPageService: GeneratedPageService) {}
+  constructor(
+    private readonly generatedPageService: GeneratedPageService,
+    private readonly openAIService: OpenaiService,
+  ) {}
 
   @Post('save-to-airtable')
   @HttpCode(200)
@@ -104,31 +111,57 @@ export class GeneratedPageController {
       generatePage,
     );
 
-    let generatedMainContent = await this.generatedPageService.askChatGPT(
-      generatePage.mainContentPrompts,
-      generatePage,
+    generatePage.mainContentPrompts = generatePage.mainContentPrompts.map(
+      (prompt) => {
+        const updatedPrompt = this.generatedPageService.replaceVariables(
+          prompt,
+          generatePage,
+        );
+
+        return generateMultipleGeosSeparatedPrompt(
+          generatePage.geo,
+          updatedPrompt,
+        );
+      },
     );
 
-    // NOTE: making second request for 100% HTML-structure following
-    const isValid =
-      await this.generatedPageService.validateHTMLContent(generatedMainContent);
+    const generatedMainContent = await this.openAIService.sendPromptsAsUser(
+      generatePage.mainContentPrompts,
+    );
 
-    if (!isValid) {
-      generatedMainContent = await this.generatedPageService.askChatGPT(
-        [
-          `${correctionOfHTMLPrompt}
-          Here is what you have generated previously:
-          ${generatedMainContent}
-          You generated it with this requirements:
-          ${generatePage.mainContentPrompts[0]}`,
-        ],
-        generatePage,
-      );
-    }
+    //NOTE: making second request for 100% HTML-structure following
+    // const isValid =
+    //   await this.generatedPageService.validateHTMLContent(generatedMainContent);
 
-    const generatedHeroContent = await this.generatedPageService.askChatGPT(
+    // if (!isValid) {
+    //   generatedMainContent = await this.generatedPageService.askChatGPT(
+    //     [
+    //       `${correctionOfHTMLPrompt}
+    //       Here is what you have generated previously:
+    //       ${generatedMainContent}
+    //       You generated it with this requirements:
+    //       ${generatePage.mainContentPrompts[0]}`,
+    //     ],
+    //     generatePage,
+    //   );
+    // }
+
+    generatePage.heroContentPrompts = generatePage.heroContentPrompts.map(
+      (prompt) => {
+        const updatedPrompt = this.generatedPageService.replaceVariables(
+          prompt,
+          generatePage,
+        );
+
+        return generateMultipleGeosSeparatedPrompt(
+          generatePage.geo,
+          updatedPrompt,
+        );
+      },
+    );
+
+    const generatedHeroContent = await this.openAIService.sendPromptsAsUser(
       generatePage.heroContentPrompts,
-      generatePage,
     );
 
     return {

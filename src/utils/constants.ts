@@ -1,9 +1,9 @@
 export const correctionOfHTMLPrompt = `
-  I validated your response to my prompt, and it seems that the generated content you have provided 
+  I validated your response to my prompt, and it seems that the generated content you have provided
   does not follow the HTML5 structure.
   Adjust its structure to be valid HTML5.
   Do not rewrite it completely, just fix the problems related to not being valid HTML5 precisely.
-  Follow all the requirements from the previous prompt before and don't forget to use the information you generated on the previous step. 
+  Follow all the requirements from the previous prompt before and don't forget to use the information you generated on the previous step.
   Only return the full changed content, without any explanations or answers from your side.
 
   As a reference of what structure I expect from you to output use this:
@@ -332,3 +332,45 @@ export const correctionOfHTMLPrompt = `
     </article>
   </section>
 `;
+
+export const generateMultipleGeosSeparatedPrompt = (
+  geosList: string,
+  prompt: string,
+) => `
+  For each geo in the list provided, generate a content piece.
+  STRICTLY FOLLOW this format for EACH geo:
+  1. A JSON block enclosed in triple backticks (\\\`\\\`\\\`). This JSON block MUST start with \\\`\\\`\\\`json and end with \\\`\\\`\\\`. The JSON block MUST contain a "geoName" property with the country name.
+  2. Immediately following the closing triple backticks of the JSON block, provide the HTML content that would typically reside within the <body> tags of an HTML5 document. Do NOT include the <html>, <head>, or <body> tags themselves, nor the <!DOCTYPE> declaration. The content should start directly with elements like <section>, <h1>, <p>, etc., as shown in the reference structure.
+
+  Do NOT include any introductory text, conversational phrases, or any text outside of this repeating pattern of (JSON block + HTML body content).
+  Do NOT include plain text country names before the JSON blocks. The "geoName" in the JSON block is sufficient.
+
+  If I have three geos, I expect exactly three (JSON block + HTML body content) pairs, one after the other, with no other text in between these pairs.
+  If I have one geo, I expect exactly one (JSON block + HTML body content) pair.
+
+  Each HTML body content piece should be a valid fragment of HTML5, structured with semantic elements like <section>, <article>, <h2>, <p>, <ul>, etc., as appropriate, and adjusted according to the rules and structure.
+  Content pieces are not connected with each other but should have a similar structure based on the rules.
+
+  Here is the list of geos:
+  ${geosList}
+
+  Below are rules for each of the geos:
+  ${prompt}
+  `;
+
+//   const contentPieces = [];
+// const parts = generatedContent.split('\`\`\`json');
+
+// for (let i = 1; i < parts.length; i++) {
+//   const [jsonString, content] = parts[i].split('\`\`\`');
+//   try {
+//     const metadata = JSON.parse(jsonString.trim());
+//     contentPieces.push({
+//       geo: metadata.geo,
+//       geoName: metadata.geoName,
+//       content: content.trim(),
+//     });
+//   } catch (error) {
+//     console.error('Error parsing JSON:', error);
+//   }
+// }
