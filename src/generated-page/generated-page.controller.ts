@@ -2,7 +2,6 @@ import {
   Body,
   Controller,
   Get,
-  HttpCode,
   HttpException,
   HttpStatus,
   Logger,
@@ -13,10 +12,8 @@ import {
   CreateGeneratedPageDto,
   GeneratePageDto,
 } from './dto/create-generated-page.dto';
-import { SaveToAirtableDto } from './dto/save-to-airtable.dto';
 import { SaveToWebflowDto } from './dto/save-to-webflow.dto';
 import { GeneratedPageService } from './generated-page.service';
-import { GeneratePageResponse } from '../utils/types';
 import { correctionOfHTMLPrompt } from '../utils/constants';
 
 @Controller('generated-page')
@@ -25,16 +22,8 @@ export class GeneratedPageController {
 
   constructor(private readonly generatedPageService: GeneratedPageService) {}
 
-  @Post('save-to-airtable')
-  @HttpCode(200)
-  savePage(@Body() request: SaveToAirtableDto) {
-    return this.generatedPageService.createWebpage(request);
-  }
-
   @Post('generate')
-  async generatePage(
-    @Body() generatePage: GeneratePageDto,
-  ): Promise<GeneratePageResponse> {
+  async generatePage(@Body() generatePage: GeneratePageDto) {
     generatePage.structurePage = this.generatedPageService.replaceVariables(
       generatePage.structurePage,
       generatePage,
@@ -97,15 +86,21 @@ export class GeneratedPageController {
       generatePage,
     );
 
-    return {
-      generatedMainContent,
-      generatedHeroContent,
-      metaTitle: generatePage.metaTitle,
+    const generatedRes = {
+      name: generatePage.name,
+      geo: generatePage.geo,
+      breadcrumb: generatePage.breadcrumb,
+      heroContent: generatedHeroContent,
+      heroTitle: generatePage.heroSectionTitle,
+      mainContent: generatedMainContent,
       metaDescription: generatePage.metaDescription,
-      keywords: generatePage.keywords,
+      metaTitle: generatePage.metaTitle,
       slug: generatePage.slug,
-      heroSectionTitle: generatePage.heroSectionTitle,
     };
+
+    const res = await this.generatedPageService.createWebpage(generatedRes);
+
+    return res;
   }
 
   @Post('save-to-webflow')

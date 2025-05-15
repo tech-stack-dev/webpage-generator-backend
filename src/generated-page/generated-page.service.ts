@@ -160,7 +160,7 @@ export class GeneratedPageService {
   }
 
   async addRecordToWebpageTable(tableName: string, record: Page) {
-    return this.airtableService.addRecordToTable<Page>(tableName, record);
+    return await this.airtableService.addRecordToTable<Page>(tableName, record);
   }
 
   async createWebpage(saveToAirtableDto: SaveToAirtableDto) {

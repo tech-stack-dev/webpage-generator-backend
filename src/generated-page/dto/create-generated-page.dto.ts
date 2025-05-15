@@ -38,6 +38,9 @@ export class CreateGeneratedPageDto {
 
 export class GeneratePageDto {
   @IsString()
+  name: string;
+
+  @IsString()
   serviceType: string;
 
   @IsString()
