@@ -15,10 +15,7 @@ import {
 import { SaveToWebflowDto } from './dto/save-to-webflow.dto';
 import { GeneratedPageService } from './generated-page.service';
 import { GeneratePageResponse } from '../utils/types';
-import {
-  correctionOfHTMLPrompt,
-  generateMultipleGeosSeparatedPrompt,
-} from '../utils/constants';
+import { correctionOfHTMLPrompt } from '../utils/constants';
 import { OpenaiService } from 'src/openai/openai.service';
 
 @Controller('generated-page')
@@ -68,17 +65,8 @@ export class GeneratedPageController {
     );
 
     generatePage.mainContentPrompts = generatePage.mainContentPrompts.map(
-      (prompt) => {
-        const updatedPrompt = this.generatedPageService.replaceVariables(
-          prompt,
-          generatePage,
-        );
-
-        return generateMultipleGeosSeparatedPrompt(
-          generatePage.geo,
-          updatedPrompt,
-        );
-      },
+      (prompt) =>
+        this.generatedPageService.replaceVariables(prompt, generatePage),
     );
 
     const generatedMainContent = await this.openAIService.sendPromptsAsUser(
@@ -103,17 +91,8 @@ export class GeneratedPageController {
     // }
 
     generatePage.heroContentPrompts = generatePage.heroContentPrompts.map(
-      (prompt) => {
-        const updatedPrompt = this.generatedPageService.replaceVariables(
-          prompt,
-          generatePage,
-        );
-
-        return generateMultipleGeosSeparatedPrompt(
-          generatePage.geo,
-          updatedPrompt,
-        );
-      },
+      (prompt) =>
+        this.generatedPageService.replaceVariables(prompt, generatePage),
     );
 
     const generatedHeroContent = await this.openAIService.sendPromptsAsUser(

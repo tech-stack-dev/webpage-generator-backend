@@ -6,11 +6,7 @@ import {
 } from '@nestjs/common';
 import * as Airtable from 'airtable';
 import axios, { AxiosRequestConfig } from 'axios';
-import {
-  ICreateTable,
-  ICreateTableRes,
-  IGetTableRecordsList,
-} from '../types/airtable';
+import { ICreateTable, ICreateTableRes } from '../types/airtable';
 import { isInvalidPermissionsError } from 'src/utils/errors';
 
 type IAddReecordToTableRes<T> = {

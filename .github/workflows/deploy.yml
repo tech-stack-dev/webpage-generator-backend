@@ -56,6 +56,7 @@ jobs:
               "API_PREFIX": "${{vars.API_PREFIX}}",
               "AIRTABLE_BASE_ID": "${{secrets.AIRTABLE_BASE_ID}}",
               "AIRTABLE_API_KEY": "${{secrets.AIRTABLE_API_KEY}}",
+              "AIRTABLE_API_URL": "${{secrets.AIRTABLE_API_URL}}",
               "OPENAI_API_KEY": "${{secrets.OPENAI_API_KEY}}",
               "ADMIN_WEBFLOW_CMS_API_KEY": "${{secrets.ADMIN_WEBFLOW_CMS_API_KEY}}",
               "WEBFLOW_CMS_API_KEY": "${{secrets.WEBFLOW_CMS_API_KEY}}",
