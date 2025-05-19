@@ -16,7 +16,7 @@ import { SaveToWebflowDto } from './dto/save-to-webflow.dto';
 import { GeneratedPageService } from './generated-page.service';
 import { GeneratePageResponse } from '../utils/types';
 import { correctionOfHTMLPrompt } from '../utils/constants';
-import { OpenaiService } from 'src/openai/openai.service';
+import { OpenaiService } from '../openai/openai.service';
 
 @Controller('generated-page')
 export class GeneratedPageController {

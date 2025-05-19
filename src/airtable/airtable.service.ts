@@ -7,7 +7,7 @@ import {
 import * as Airtable from 'airtable';
 import axios, { AxiosRequestConfig } from 'axios';
 import { ICreateTable, ICreateTableRes } from '../types/airtable';
-import { isInvalidPermissionsError } from 'src/utils/errors';
+import { isInvalidPermissionsError } from '../utils/errors';
 
 type IAddReecordToTableRes<T> = {
   id: string;
