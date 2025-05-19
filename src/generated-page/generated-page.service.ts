@@ -1,3 +1,4 @@
+import { newWebpageTable } from './../utils/newWebpageTable';
 import { Injectable, Logger } from '@nestjs/common';
 import * as Airtable from 'airtable';
 import { OpenaiService } from '../openai/openai.service';
@@ -6,6 +7,9 @@ import {
   GeneratePageDto,
 } from './dto/create-generated-page.dto';
 import * as validator from 'html-validator';
+import { AirtableService } from '../airtable/airtable.service';
+import { SaveToAirtableDto } from './dto/save-to-airtable.dto';
+import { ICreateTable } from 'src/types/airtable';
 
 export interface WebflowItem {
   name: string | undefined;
@@ -19,13 +23,13 @@ export interface WebflowItem {
 }
 
 export interface Page {
-  breadcrumb: string;
+  // breadcrumb: string;
   metaTitle: string;
   metaDescription: string;
   heroTitle: string;
   mainContent: string;
   slug: string;
-  Name: string;
+  geo: string;
   heroContent: string;
 }
 
@@ -33,7 +37,10 @@ export interface Page {
 export class GeneratedPageService {
   private readonly logger = new Logger(GeneratedPageService.name);
 
-  constructor(private readonly openaiService: OpenaiService) {}
+  constructor(
+    private readonly openaiService: OpenaiService,
+    private readonly airtableService: AirtableService,
+  ) {}
 
   async generatePage(prompts: string[], data: CreateGeneratedPageDto) {
     const processedPrompts = prompts.map((prompt) =>
@@ -150,5 +157,29 @@ export class GeneratedPageService {
       );
       return false;
     }
+  }
+
+  async addRecordToWebpageTable(tableName: string, record: Page) {
+    return await this.airtableService.addRecordToTable<Page>(tableName, record);
+  }
+
+  async createWebpage(saveToAirtableDto: SaveToAirtableDto) {
+    const { breadcrumb, name: tableName, ...recordToSave } = saveToAirtableDto;
+
+    const isExistingTable =
+      await this.airtableService.checkIfTableExists(tableName);
+
+    if (isExistingTable) {
+      return await this.addRecordToWebpageTable(tableName, recordToSave);
+    }
+
+    const newTable: ICreateTable = {
+      ...newWebpageTable,
+      name: saveToAirtableDto.name,
+    };
+
+    await this.airtableService.createTable(newTable);
+
+    return await this.addRecordToWebpageTable(tableName, recordToSave);
   }
 }

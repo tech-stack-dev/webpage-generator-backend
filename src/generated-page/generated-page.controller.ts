@@ -2,7 +2,6 @@ import {
   Body,
   Controller,
   Get,
-  HttpCode,
   HttpException,
   HttpStatus,
   Logger,
@@ -13,62 +12,23 @@ import {
   CreateGeneratedPageDto,
   GeneratePageDto,
 } from './dto/create-generated-page.dto';
-import { SaveToAirtableDto } from './dto/save-to-airtable.dto';
 import { SaveToWebflowDto } from './dto/save-to-webflow.dto';
 import { GeneratedPageService } from './generated-page.service';
 import { GeneratePageResponse } from '../utils/types';
 import { correctionOfHTMLPrompt } from '../utils/constants';
+import { OpenaiService } from 'src/openai/openai.service';
 
 @Controller('generated-page')
 export class GeneratedPageController {
   private readonly logger = new Logger(GeneratedPageController.name);
 
-  constructor(private readonly generatedPageService: GeneratedPageService) {}
-
-  @Post('save-to-airtable')
-  @HttpCode(200)
-  savePage(@Body() request: SaveToAirtableDto) {
-    const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
-
-    if (!AIRTABLE_BASE_ID) {
-      throw new HttpException(
-        'No AIRTABLE_BASE_ID was provided to an app',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-
-    const tableName = 'webpages';
-
-    const newRecord = {
-      Name: request.name,
-      mainContent: request.mainContent,
-      metaTitle: request.metaTitle,
-      metaDescription: request.metaDescription,
-      slug: request.slug,
-      breadcrumb: request.breadcrumb,
-      heroTitle: request.heroTitle,
-      heroContent: request.heroContent,
-    };
-
-    const base = new Airtable().base(AIRTABLE_BASE_ID);
-
-    base(tableName).create(newRecord, (err, record) => {
-      if (err) {
-        this.logger.error('Error adding record:', err);
-        return;
-      }
-      if (record) {
-        this.logger.log('Record added with ID:', record.getId());
-      }
-    });
-
-    return newRecord;
-  }
+  constructor(
+    private readonly generatedPageService: GeneratedPageService,
+    private readonly openAIService: OpenaiService,
+  ) {}
 
   @Post('generate')
-  async generatePage(
-    @Body() generatePage: GeneratePageDto,
-  ): Promise<GeneratePageResponse> {
+  async generatePage(@Body() generatePage: GeneratePageDto) {
     generatePage.structurePage = this.generatedPageService.replaceVariables(
       generatePage.structurePage,
       generatePage,
@@ -104,42 +64,56 @@ export class GeneratedPageController {
       generatePage,
     );
 
-    let generatedMainContent = await this.generatedPageService.askChatGPT(
+    generatePage.mainContentPrompts = generatePage.mainContentPrompts.map(
+      (prompt) =>
+        this.generatedPageService.replaceVariables(prompt, generatePage),
+    );
+
+    const generatedMainContent = await this.openAIService.sendPromptsAsUser(
       generatePage.mainContentPrompts,
-      generatePage,
     );
 
-    // NOTE: making second request for 100% HTML-structure following
-    const isValid =
-      await this.generatedPageService.validateHTMLContent(generatedMainContent);
+    //NOTE: making second request for 100% HTML-structure following
+    // const isValid =
+    //   await this.generatedPageService.validateHTMLContent(generatedMainContent);
 
-    if (!isValid) {
-      generatedMainContent = await this.generatedPageService.askChatGPT(
-        [
-          `${correctionOfHTMLPrompt}
-          Here is what you have generated previously:
-          ${generatedMainContent}
-          You generated it with this requirements:
-          ${generatePage.mainContentPrompts[0]}`,
-        ],
-        generatePage,
-      );
-    }
+    // if (!isValid) {
+    //   generatedMainContent = await this.generatedPageService.askChatGPT(
+    //     [
+    //       `${correctionOfHTMLPrompt}
+    //       Here is what you have generated previously:
+    //       ${generatedMainContent}
+    //       You generated it with this requirements:
+    //       ${generatePage.mainContentPrompts[0]}`,
+    //     ],
+    //     generatePage,
+    //   );
+    // }
 
-    const generatedHeroContent = await this.generatedPageService.askChatGPT(
+    generatePage.heroContentPrompts = generatePage.heroContentPrompts.map(
+      (prompt) =>
+        this.generatedPageService.replaceVariables(prompt, generatePage),
+    );
+
+    const generatedHeroContent = await this.openAIService.sendPromptsAsUser(
       generatePage.heroContentPrompts,
-      generatePage,
     );
 
-    return {
-      generatedMainContent,
-      generatedHeroContent,
-      metaTitle: generatePage.metaTitle,
+    const generatedRes = {
+      name: generatePage.name,
+      geo: generatePage.geo,
+      breadcrumb: generatePage.breadcrumb,
+      heroContent: generatedHeroContent,
+      heroTitle: generatePage.heroSectionTitle,
+      mainContent: generatedMainContent,
       metaDescription: generatePage.metaDescription,
-      keywords: generatePage.keywords,
+      metaTitle: generatePage.metaTitle,
       slug: generatePage.slug,
-      heroSectionTitle: generatePage.heroSectionTitle,
     };
+
+    const res = await this.generatedPageService.createWebpage(generatedRes);
+
+    return res;
   }
 
   @Post('save-to-webflow')

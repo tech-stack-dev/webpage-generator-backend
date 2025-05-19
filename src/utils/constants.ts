@@ -1,9 +1,9 @@
 export const correctionOfHTMLPrompt = `
-  I validated your response to my prompt, and it seems that the generated content you have provided 
+  I validated your response to my prompt, and it seems that the generated content you have provided
   does not follow the HTML5 structure.
   Adjust its structure to be valid HTML5.
   Do not rewrite it completely, just fix the problems related to not being valid HTML5 precisely.
-  Follow all the requirements from the previous prompt before and don't forget to use the information you generated on the previous step. 
+  Follow all the requirements from the previous prompt before and don't forget to use the information you generated on the previous step.
   Only return the full changed content, without any explanations or answers from your side.
 
   As a reference of what structure I expect from you to output use this:

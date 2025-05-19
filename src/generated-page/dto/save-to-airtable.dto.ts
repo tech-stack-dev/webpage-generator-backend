@@ -5,6 +5,9 @@ export class SaveToAirtableDto {
   name: string;
 
   @IsString()
+  geo: string;
+
+  @IsString()
   mainContent: string;
 
   @IsString()
