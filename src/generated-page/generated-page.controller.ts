@@ -17,6 +17,7 @@ import { GeneratedPageService } from './generated-page.service';
 import { GeneratePageResponse } from '../utils/types';
 import { correctionOfHTMLPrompt } from '../utils/constants';
 import { OpenaiService } from '../openai/openai.service';
+import { SaveToAirtableDto } from '../generated-page/dto/save-to-airtable.dto';
 
 @Controller('generated-page')
 export class GeneratedPageController {
@@ -28,92 +29,130 @@ export class GeneratedPageController {
   ) {}
 
   @Post('generate')
-  async generatePage(@Body() generatePage: GeneratePageDto) {
-    generatePage.structurePage = this.generatedPageService.replaceVariables(
-      generatePage.structurePage,
-      generatePage,
-    );
+  async generatePage(@Body() incomingGeneratePageDto: GeneratePageDto) {
+    const geos = incomingGeneratePageDto.geo
+      .split(',')
+      .map((g) => g.trim())
+      .filter((g) => g);
 
-    generatePage.keywords = this.generatedPageService.replaceVariables(
-      generatePage.keywords,
-      generatePage,
-    );
+    if (!geos.length) {
+      this.logger.warn(
+        'No valid geo values provided after splitting and trimming. Original geo string: ' +
+          incomingGeneratePageDto.geo,
+      );
+      return [];
+    }
 
-    generatePage.breadcrumb = this.generatedPageService.replaceVariables(
-      generatePage.breadcrumb,
-      generatePage,
-    );
+    const results = [];
 
-    generatePage.metaTitle = this.generatedPageService.replaceVariables(
-      generatePage.metaTitle,
-      generatePage,
-    );
+    for (const currentGeo of geos) {
+      const replacementDataForThisGeo: GeneratePageDto = {
+        ...incomingGeneratePageDto,
+        geo: currentGeo,
+      };
 
-    generatePage.metaDescription = this.generatedPageService.replaceVariables(
-      generatePage.metaDescription,
-      generatePage,
-    );
+      replacementDataForThisGeo.structurePage =
+        this.generatedPageService.replaceVariables(
+          incomingGeneratePageDto.structurePage,
+          replacementDataForThisGeo,
+        );
 
-    generatePage.slug = this.generatedPageService.replaceVariables(
-      generatePage.slug,
-      generatePage,
-    );
+      replacementDataForThisGeo.keywords =
+        this.generatedPageService.replaceVariables(
+          incomingGeneratePageDto.keywords,
+          replacementDataForThisGeo,
+        );
 
-    generatePage.heroSectionTitle = this.generatedPageService.replaceVariables(
-      generatePage.heroSectionTitle,
-      generatePage,
-    );
+      const processedBreadcrumb = this.generatedPageService.replaceVariables(
+        incomingGeneratePageDto.breadcrumb,
+        replacementDataForThisGeo,
+      );
+      const processedMetaTitle = this.generatedPageService.replaceVariables(
+        incomingGeneratePageDto.metaTitle,
+        replacementDataForThisGeo,
+      );
+      const processedMetaDescription =
+        this.generatedPageService.replaceVariables(
+          incomingGeneratePageDto.metaDescription,
+          replacementDataForThisGeo,
+        );
+      const processedSlug = this.generatedPageService.replaceVariables(
+        incomingGeneratePageDto.slug,
+        replacementDataForThisGeo,
+      );
+      const processedHeroSectionTitle =
+        this.generatedPageService.replaceVariables(
+          incomingGeneratePageDto.heroSectionTitle,
+          replacementDataForThisGeo,
+        );
 
-    generatePage.mainContentPrompts = generatePage.mainContentPrompts.map(
-      (prompt) =>
-        this.generatedPageService.replaceVariables(prompt, generatePage),
-    );
+      const processedMainContentPrompts =
+        incomingGeneratePageDto.mainContentPrompts.map((prompt) =>
+          this.generatedPageService.replaceVariables(
+            prompt,
+            replacementDataForThisGeo,
+          ),
+        );
 
-    const generatedMainContent = await this.openAIService.sendPromptsAsUser(
-      generatePage.mainContentPrompts,
-    );
+      let generatedMainContent = await this.openAIService.sendPromptsAsUser(
+        processedMainContentPrompts,
+      );
 
-    //NOTE: making second request for 100% HTML-structure following
-    // const isValid =
-    //   await this.generatedPageService.validateHTMLContent(generatedMainContent);
+      // If re-enabling HTML validation, it should be done here for generatedMainContent
+      // and use `replacementDataForThisGeo` and `processedMainContentPrompts` if needed for context.
+      // Example:
+      const validation =
+        await this.generatedPageService.validateHTMLContent(
+          generatedMainContent,
+        );
 
-    // if (!isValid) {
-    //   generatedMainContent = await this.generatedPageService.askChatGPT(
-    //     [
-    //       `${correctionOfHTMLPrompt}
-    //       Here is what you have generated previously:
-    //       ${generatedMainContent}
-    //       You generated it with this requirements:
-    //       ${generatePage.mainContentPrompts[0]}`,
-    //     ],
-    //     generatePage,
-    //   );
-    // }
+      if (!validation.isValid) {
+        this.logger.warn(
+          `HTML validation failed for geo: ${currentGeo}. Attempting correction.`,
+        );
+        generatedMainContent = await this.generatedPageService.askChatGPT(
+          [
+            `${correctionOfHTMLPrompt(validation.errors || '')}
+            Here is what you have generated previously:
+            ${generatedMainContent}
+            You generated it with this requirements:
+            ${processedMainContentPrompts[0] || 'No original prompt available for context.'}`,
+          ],
+          replacementDataForThisGeo,
+        );
+      }
 
-    generatePage.heroContentPrompts = generatePage.heroContentPrompts.map(
-      (prompt) =>
-        this.generatedPageService.replaceVariables(prompt, generatePage),
-    );
+      const processedHeroContentPrompts =
+        incomingGeneratePageDto.heroContentPrompts.map((prompt) =>
+          this.generatedPageService.replaceVariables(
+            prompt,
+            replacementDataForThisGeo,
+          ),
+        );
 
-    const generatedHeroContent = await this.openAIService.sendPromptsAsUser(
-      generatePage.heroContentPrompts,
-    );
+      const generatedHeroContent = await this.openAIService.sendPromptsAsUser(
+        processedHeroContentPrompts,
+      );
 
-    const generatedRes = {
-      name: generatePage.name,
-      geo: generatePage.geo,
-      breadcrumb: generatePage.breadcrumb,
-      heroContent: generatedHeroContent,
-      heroTitle: generatePage.heroSectionTitle,
-      mainContent: generatedMainContent,
-      metaDescription: generatePage.metaDescription,
-      metaTitle: generatePage.metaTitle,
-      slug: generatePage.slug,
-    };
+      const generatedRes: SaveToAirtableDto = {
+        name: incomingGeneratePageDto.name,
+        geo: currentGeo,
+        breadcrumb: processedBreadcrumb,
+        heroContent: generatedHeroContent,
+        heroTitle: processedHeroSectionTitle,
+        mainContent: generatedMainContent,
+        metaDescription: processedMetaDescription,
+        metaTitle: processedMetaTitle,
+        slug: processedSlug,
+      };
 
-    const res = await this.generatedPageService.createWebpage(generatedRes);
+      const result =
+        await this.generatedPageService.createWebpage(generatedRes);
 
-    return res;
+      results.push(result);
+    }
+
+    return results;
   }
 
   @Post('save-to-webflow')

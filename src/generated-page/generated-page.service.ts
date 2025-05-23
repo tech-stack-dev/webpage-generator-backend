@@ -1,5 +1,9 @@
 import { newWebpageTable } from './../utils/newWebpageTable';
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import * as Airtable from 'airtable';
 import { OpenaiService } from '../openai/openai.service';
 import {
@@ -10,6 +14,7 @@ import * as validator from 'html-validator';
 import { AirtableService } from '../airtable/airtable.service';
 import { SaveToAirtableDto } from './dto/save-to-airtable.dto';
 import { ICreateTable } from 'src/types/airtable';
+import { wrapInHtmlDoc } from 'src/utils/wrapInHtmlDoc';
 
 export interface WebflowItem {
   name: string | undefined;
@@ -32,6 +37,11 @@ export interface Page {
   geo: string;
   heroContent: string;
 }
+
+type ValidationRes = {
+  isValid: boolean;
+  errors?: string;
+};
 
 @Injectable()
 export class GeneratedPageService {
@@ -135,27 +145,70 @@ export class GeneratedPageService {
     return (await response.json()) as Promise<unknown>;
   }
 
-  async validateHTMLContent(htmlLikeData: string): Promise<boolean> {
+  async validateHTMLContent(htmlFragment: string): Promise<ValidationRes> {
+    const fullHtmlDocument = wrapInHtmlDoc(htmlFragment);
+
     const validationOptions = {
-      // NOTE: option to validate locally instead of doing a roundtrip to the remote server
-      data: htmlLikeData,
-      validator: 'WHATWG',
-      isFragment: true,
+      data: fullHtmlDocument,
+      format: 'json' as const,
     };
 
     try {
-      const validationResult = await validator(validationOptions);
-      //@ts-expect-error incomplete typings of said library
-      console.log('VALID BY VALIDATOR', validationResult.isValid);
+      const validationResult = (await validator(validationOptions)) as {
+        messages: Array<{ type: string; message: string; [key: string]: any }>;
+      };
 
-      //@ts-expect-error incomplete typings
-      return validationResult.isValid as boolean;
+      console.log('Validation result:', validationResult);
+
+      if (!validationResult || !Array.isArray(validationResult.messages)) {
+        this.logger.error(
+          'HTML validator returned an unexpected result format.',
+        );
+
+        throw new InternalServerErrorException(
+          'HTML validator returned an unexpected result format.',
+        );
+      }
+
+      const hasErrors = validationResult.messages.some(
+        (message) => message.type === 'error',
+      );
+
+      if (hasErrors) {
+        this.logger.warn('HTML validation failed with errors:');
+        const errors = validationResult.messages
+          .filter((message) => message.type === 'error')
+          .map(
+            (message) =>
+              `- ${message.message} (Line: ${message.lastLine}, Col: ${message.firstColumn}) Extract: ${message.extract?.substring(
+                0,
+                100,
+              )}`,
+          )
+          .join('\n');
+
+        validationResult.messages.forEach((message) => {
+          if (message.type === 'error') {
+            this.logger.warn(
+              `- ${message.message} (Line: ${message.lastLine}, Col: ${message.firstColumn}) Extract: ${message.extract?.substring(0, 100)}`,
+            );
+          }
+        });
+
+        return { isValid: false, errors: errors };
+      }
+
+      return { isValid: true };
     } catch (error) {
-      console.error(
-        'Error during validation of the document occured, which is not related to the validator itself',
+      this.logger.error(
+        'Error during HTML validation process (validator function call failed):',
         error,
       );
-      return false;
+
+      return {
+        isValid: false,
+        errors: 'An error occurred during HTML validation.',
+      };
     }
   }
 
