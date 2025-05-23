@@ -13,8 +13,8 @@ import {
 import * as validator from 'html-validator';
 import { AirtableService } from '../airtable/airtable.service';
 import { SaveToAirtableDto } from './dto/save-to-airtable.dto';
-import { ICreateTable } from 'src/types/airtable';
-import { wrapInHtmlDoc } from 'src/utils/wrapInHtmlDoc';
+import { ICreateTable } from '../types/airtable';
+import { wrapInHtmlDoc } from '../utils/wrapInHtmlDoc';
 
 export interface WebflowItem {
   name: string | undefined;
