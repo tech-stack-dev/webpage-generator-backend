@@ -32,5 +32,13 @@ export const newWebpageTable: ICreateTable = {
       name: 'heroContent',
       type: 'multilineText',
     },
+    {
+      name: 'status',
+      type: 'checkbox',
+      options: {
+        color: 'greenBright',
+        icon: 'check',
+      },
+    },
   ],
 };

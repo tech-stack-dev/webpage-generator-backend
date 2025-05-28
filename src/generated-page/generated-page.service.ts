@@ -36,6 +36,7 @@ export interface Page {
   slug: string;
   geo: string;
   heroContent: string;
+  status: boolean;
 }
 
 type ValidationRes = {
@@ -219,11 +220,16 @@ export class GeneratedPageService {
   async createWebpage(saveToAirtableDto: SaveToAirtableDto) {
     const { breadcrumb, name: tableName, ...recordToSave } = saveToAirtableDto;
 
+    const newWebpageRecord: Page = {
+      ...recordToSave,
+      status: false,
+    };
+
     const isExistingTable =
       await this.airtableService.checkIfTableExists(tableName);
 
     if (isExistingTable) {
-      return await this.addRecordToWebpageTable(tableName, recordToSave);
+      return await this.addRecordToWebpageTable(tableName, newWebpageRecord);
     }
 
     const newTable: ICreateTable = {
@@ -233,6 +239,6 @@ export class GeneratedPageService {
 
     await this.airtableService.createTable(newTable);
 
-    return await this.addRecordToWebpageTable(tableName, recordToSave);
+    return await this.addRecordToWebpageTable(tableName, newWebpageRecord);
   }
 }
