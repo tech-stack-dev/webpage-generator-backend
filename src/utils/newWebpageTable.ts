@@ -9,8 +9,8 @@ export const newWebpageTable: ICreateTable = {
       type: 'singleLineText',
     },
     {
-      name: 'mainContent',
-      type: 'multilineText',
+      name: 'slug',
+      type: 'singleLineText',
     },
     {
       name: 'metaTitle',
@@ -21,15 +21,15 @@ export const newWebpageTable: ICreateTable = {
       type: 'multilineText',
     },
     {
-      name: 'slug',
-      type: 'singleLineText',
-    },
-    {
       name: 'heroTitle',
       type: 'singleLineText',
     },
     {
       name: 'heroContent',
+      type: 'multilineText',
+    },
+    {
+      name: 'mainContent',
       type: 'multilineText',
     },
     {
