@@ -97,7 +97,13 @@ export class GeneratedPageController {
     const validation =
       await this.generatedPageService.validateHTMLContent(generatedMainContent);
 
-    if (!validation.isValid) {
+    if (
+      generatedMainContent
+        .toLowerCase()
+        .includes("i can't assist with that request") ||
+      generatedMainContent.length < 100 ||
+      !validation.isValid
+    ) {
       this.logger.warn(
         `HTML validation failed for geo: ${geo}. Attempting correction.`,
       );
